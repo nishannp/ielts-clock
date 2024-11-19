@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+        }
+
+        h1 {
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            color: #ffffff;
+        }
+
+        .timer-display {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin: 1.5rem 0;
+            font-family: monospace;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .task-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            justify-content: center;
+        }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            backdrop-filter: blur(5px);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.active {
+            background: rgba(255, 255, 255, 0.4);
+            font-weight: bold;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .status {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            .timer-display {
+                font-size: 2.5rem;
+            }
+
+            .task-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IELTS Writing Timer</h1>
+        <div class="task-buttons">
+            <button onclick="setTask(1)" id="task1">Task 1 (20 min)</button>
+            <button onclick="setTask(2)" id="task2">Task 2 (40 min)</button>
+        </div>
+        <div class="timer-display" id="timer">00:00</div>
+        <div class="control-buttons">
+            <button onclick="startTimer()" id="startBtn">Start</button>
+            <button onclick="pauseTimer()" id="pauseBtn">Pause</button>
+            <button onclick="resetTimer()" id="resetBtn">Reset</button>
+        </div>
+        <div class="status" id="status">Select a task to begin</div>
+    </div>
+
+    <script>
+        let timeLeft = 0;
+        let timerId = null;
+        let isPaused = false;
+        let currentTask = null;
+
+        const audio = new Audio('alarm.mp3');
+
+        function setTask(task) {
+            currentTask = task;
+            timeLeft = task === 1 ? 20 * 60 : 40 * 60;
+            document.getElementById('task1').classList.toggle('active', task === 1);
+            document.getElementById('task2').classList.toggle('active', task === 2);
+            updateDisplay();
+            resetTimer();
+            updateStatus(`Task ${task} selected - ${task === 1 ? '20' : '40'} minutes`);
+        }
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('timer').textContent = display;
+            document.title = `${display} - IELTS Timer`;
+        }
+
+        function startTimer() {
+            if (!currentTask) {
+                updateStatus('Please select a task first');
+                return;
+            }
+            if (timerId !== null) return;
+            if (timeLeft <= 0) {
+                setTask(currentTask);
+            }
+            timerId = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timerId);
+                    timerId = null;
+                    audio.play();
+                    updateStatus('Time\'s up!');
+                    return;
+                }
+                timeLeft--;
+                updateDisplay();
+            }, 1000);
+            updateStatus('Timer running');
+        }
+
+        function pauseTimer() {
+            if (timerId) {
+                clearInterval(timerId);
+                timerId = null;
+                updateStatus('Timer paused');
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerId);
+            timerId = null;
+            if (currentTask) {
+                timeLeft = currentTask === 1 ? 20 * 60 : 40 * 60;
+            } else {
+                timeLeft = 0;
+            }
+            updateDisplay();
+            updateStatus('Timer reset');
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        // Initial display update
+        updateDisplay();
+    </script>
+</body>
+</html>
